@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2007-2011 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2012 Concurrent, Inc. All Rights Reserved.
  *
  * Project and contact information: http://www.concurrentinc.com/
  */
+
 import java.text.SimpleDateFormat
 
 apply plugin: 'java'
@@ -11,7 +12,7 @@ apply plugin: 'idea'
 project.version =
   configurations {
     provided
-    provided.extendsFrom(compile)
+    provided.extendsFrom( compile )
   }
 
 sourceSets {
@@ -23,45 +24,45 @@ sourceSets {
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', urls: 'http://conjars.org/repo/'
+  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
 }
 
 dependencies {
-  compile('cascading:cascading-core:2.0.0-wip-+') { exclude group: 'log4j' }
-  compile('cascading:cascading-xml:2.0.0-wip-+')
-  compile('cascading:cascading-hadoop:2.0.0-wip-+') { transitive = false }
+  compile( 'cascading:cascading-core:2.0.0-wip-+' ) { exclude group: 'log4j' }
+  compile( 'cascading:cascading-xml:2.0.0-wip-+' )
+  compile( 'cascading:cascading-hadoop:2.0.0-wip-+' ) { transitive = false }
 }
 
 jar {
   description = "Assembles a Hadoop ready jar file"
   doFirst {
-    into('lib') {
+    into( 'lib' ) {
       from configurations.compile
     }
   }
 
   manifest {
-    attributes("Main-Class": "${archivesBaseName}/Main")
+    attributes( "Main-Class": "${archivesBaseName}/Main" )
   }
 }
 
-task distCopy(type: Copy, dependsOn: jar) {
+task distCopy( type: Copy, dependsOn: jar ) {
 
   into "${buildDir}/dist/${archivesBaseName}"
 
   from 'README.TXT'
   from 'build.gradle'
-  from('src') {into 'src'}
-  from('data') {into 'data'}
+  from( 'src' ) {into 'src'}
+  from( 'data' ) {into 'data'}
 
   from "$buildDir/libs"
 
 }
 
-task dist(type: Tar, dependsOn: distCopy) {
+task dist( type: Tar, dependsOn: distCopy ) {
 
   compression = "GZIP"
-  classifier = new SimpleDateFormat("yyyyMMdd").format(new Date())
+  classifier = new SimpleDateFormat( "yyyyMMdd" ).format( new Date() )
 
   from "${buildDir}/dist/"
 }

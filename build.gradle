@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2007-2011 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2012 Concurrent, Inc. All Rights Reserved.
  *
  * Project and contact information: http://www.concurrentinc.com/
  */
 
 apply plugin: 'java'
 
-evaluationDependsOn('logparser')
-evaluationDependsOn('loganalysis')
-evaluationDependsOn('wordcount')
-evaluationDependsOn('hadoop')
+evaluationDependsOn( 'logparser' )
+evaluationDependsOn( 'loganalysis' )
+evaluationDependsOn( 'wordcount' )
+evaluationDependsOn( 'hadoop' )
 
 configurations {
   sshAntTask
@@ -24,19 +24,19 @@ dependencies {
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', urls: 'http://conjars.org/repo/'
-  mavenRepo name: 'apache', urls: 'https://repository.apache.org/content/repositories/releases/'
+  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
+  mavenRepo name: 'apache', url: 'https://repository.apache.org/content/repositories/releases/'
 }
 
 if( project.properties[ 'teamcity' ] ) // make them system properties
-System.properties.putAll(project.properties[ 'teamcity' ])
+  System.properties.putAll( project.properties[ 'teamcity' ] )
 
 if( System.properties[ 'aws.properties' ] )
 {
-  file(System.properties[ 'aws.properties' ]).withReader { reader ->
+  file( System.properties[ 'aws.properties' ] ).withReader { reader ->
     def awsProperties = new Properties()
-    awsProperties.load(reader)
-    System.properties.putAll(awsProperties)
+    awsProperties.load( reader )
+    System.properties.putAll( awsProperties )
   }
 }
 
@@ -56,24 +56,24 @@ numParts = [
         hadoop: 1
 ]
 
-def prepareTasks = []
-def archivePaths = []
+def prepareTasks = [ ]
+def archivePaths = [ ]
 
 subprojects {
 
   def verifyPath = "${buildDir}/verify/"
   def execPath = "${verifyPath}/${project.name}"
 
-  task unpackDist(dependsOn: 'dist') {
+  task unpackDist( dependsOn: 'dist' ) {
     archivePath = tasks[ 'dist' ].archivePath
     archivePaths << archivePath
   }
 
   unpackDist << {
-    ant.untar(src: archivePath, dest: verifyPath, compression: "gzip")
+    ant.untar( src: archivePath, dest: verifyPath, compression: "gzip" )
   }
 
-  task execSample(dependsOn: unpackDist) {
+  task execSample( dependsOn: unpackDist ) {
     description = 'execute all samples using $hadoop.home property, disable with $execsample.skip=true'
     enabled = System.properties[ 'execsample.skip' ] != 'true'
   }
@@ -81,20 +81,20 @@ subprojects {
   execSample << {
 
     assert hadoopHome
-    ant.exec(dir: execPath, executable: "${hadoopHome}/bin/hadoop", output: "${verifyPath}/console.txt") {
-      arg(line: commandLines[ project.name ])
+    ant.exec( dir: execPath, executable: "${hadoopHome}/bin/hadoop", output: "${verifyPath}/console.txt" ) {
+      arg( line: commandLines[ project.name ] )
     }
   }
 
   execSample << {
-    assert fileTree(execPath).include('**/part-00000').getFiles().size() == numParts[ project.name ]
+    assert fileTree( execPath ).include( '**/part-00000' ).getFiles().size() == numParts[ project.name ]
     println "${project.name} PASSED exec dist tests"
   }
 
   prepareTasks << execSample
 }
 
-task s3Upload(dependsOn: prepareTasks) {
+task s3Upload( dependsOn: prepareTasks ) {
 
   awsAccessId = System.properties[ 'publish.aws.accessId' ]
   awsSecretKey = System.properties[ 'publish.aws.secretKey' ]
@@ -105,18 +105,18 @@ task s3Upload(dependsOn: prepareTasks) {
 
 s3Upload << {
 
-  ant.taskdef(name: 's3Upload', classname: 'dak.ant.taskdefs.S3Upload',
-          classpath: configurations.s3AntTask.asPath)
+  ant.taskdef( name: 's3Upload', classname: 'dak.ant.taskdefs.S3Upload',
+          classpath: configurations.s3AntTask.asPath )
 
   archivePaths.each {archive ->
-    ant.s3Upload(verbose: 'true', accessId: awsAccessId, secretKey: awsSecretKey,
-            bucket: s3Bucket, prefix: remotePath, publicRead: 'true') {
-      fileset(file: archive)
+    ant.s3Upload( verbose: 'true', accessId: awsAccessId, secretKey: awsSecretKey,
+            bucket: s3Bucket, prefix: remotePath, publicRead: 'true' ) {
+      fileset( file: archive )
     }
   }
 }
 
-task sitePublish(dependsOn: s3Upload) << {
+task sitePublish( dependsOn: s3Upload ) << {
 
   def publishBucket = System.properties[ 'publish.bucket' ]
   def publishDownloadPath = System.properties[ 'publish.download.path' ]
@@ -126,17 +126,17 @@ task sitePublish(dependsOn: s3Upload) << {
   archivePaths.each { tarFile ->
     def releaseTar = tarFile.name
 
-    def currentPath = new File('sample-current.txt')
+    def currentPath = new File( 'sample-current.txt' )
 
-    currentPath.write("http://${publishBucket}/samples/2.0/${releaseTar}")
+    currentPath.write( "http://${publishBucket}/samples/2.0/${releaseTar}" )
 
-    ant.taskdef(name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
-            classpath: configurations.sshAntTask.asPath)
+    ant.taskdef( name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
+            classpath: configurations.sshAntTask.asPath )
 
     def remoteToFile = "${publishDownloadPath}/samples/2.0/${releaseTar}"
 
-    ant.scp(file: currentPath, remoteToFile: remoteToFile,
-            keyfile: publishKeyFile, passphrase: '', port: publishPort, trust: 'true')
+    ant.scp( file: currentPath, remoteToFile: remoteToFile,
+            keyfile: publishKeyFile, passphrase: '', port: publishPort, trust: 'true' )
 
     currentPath.delete()
   }

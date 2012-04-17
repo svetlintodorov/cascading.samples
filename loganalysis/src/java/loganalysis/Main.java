@@ -1,34 +1,18 @@
 /*
- * Copyright (c) 2007-2011 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2012 Concurrent, Inc. All Rights Reserved.
  *
- * Project and contact information: http://www.cascading.org/
- *
- * This file is part of the Cascading project.
- *
- * Cascading is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Cascading is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Cascading.  If not, see <http://www.gnu.org/licenses/>.
+ * Project and contact information: http://www.concurrentinc.com/
  */
 
 package loganalysis;
 
-import java.util.Map;
 import java.util.Properties;
 
 import cascading.cascade.Cascade;
 import cascading.cascade.CascadeConnector;
-import cascading.cascade.Cascades;
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
+import cascading.flow.FlowDef;
 import cascading.flow.hadoop.HadoopFlowConnector;
 import cascading.operation.aggregator.Count;
 import cascading.operation.expression.ExpressionFunction;
@@ -38,6 +22,7 @@ import cascading.pipe.Each;
 import cascading.pipe.Every;
 import cascading.pipe.GroupBy;
 import cascading.pipe.Pipe;
+import cascading.property.AppProps;
 import cascading.scheme.hadoop.TextLine;
 import cascading.tap.Tap;
 import cascading.tap.hadoop.Hfs;
@@ -53,10 +38,10 @@ public class Main
     {
     // set the current job jar
     Properties properties = new Properties();
-    FlowConnector.setApplicationJarClass( properties, Main.class );
+    AppProps.setApplicationJarClass( properties, Main.class );
 
     FlowConnector flowConnector = new HadoopFlowConnector( properties );
-    CascadeConnector cascadeConnector = new CascadeConnector();
+    CascadeConnector cascadeConnector = new CascadeConnector( properties );
 
     String inputPath = args[ 0 ];
     String logsPath = args[ 1 ] + "/logs/";
@@ -108,11 +93,15 @@ public class Main
     Tap tsSinkTap = new Hfs( new TextLine(), arrivalRateSecPath );
     Tap tmSinkTap = new Hfs( new TextLine(), arrivalRateMinPath );
 
-    // a convenience method for binding taps and pipes, order is significant
-    Map<String, Tap> sinks = Cascades.tapsMap( Pipe.pipes( tsCountPipe, tmCountPipe ), Tap.taps( tsSinkTap, tmSinkTap ) );
+    // a alternative method for binding taps and pipes
+    FlowDef flowDef = FlowDef.flowDef();
+
+    flowDef.addSource( tsPipe, parsedLogTap );
+    flowDef.addTailSink( tsCountPipe, tsSinkTap );
+    flowDef.addTailSink( tmCountPipe, tmSinkTap );
 
     // connect the assembly to the source and sink taps
-    Flow arrivalRateFlow = flowConnector.connect( parsedLogTap, sinks, tsCountPipe, tmCountPipe );
+    Flow arrivalRateFlow = flowConnector.connect( flowDef );
 
     // optionally print out the arrivalRateFlow to a graph file for import into a graphics package
     //arrivalRateFlow.writeDOT( "arrivalrate.dot" );
