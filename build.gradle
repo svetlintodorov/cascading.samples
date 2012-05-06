@@ -11,16 +11,6 @@ evaluationDependsOn( 'loganalysis' )
 evaluationDependsOn( 'wordcount' )
 evaluationDependsOn( 'hadoop' )
 
-configurations {
-  sshAntTask
-  s3AntTask
-}
-
-dependencies {
-  sshAntTask 'org.apache.ant:ant-jsch:1.7.1', 'jsch:jsch:0.1.29'
-  s3AntTask 'thirdparty:awstasks:0.3'
-}
-
 repositories {
   mavenLocal()
   mavenCentral()
@@ -56,17 +46,23 @@ numParts = [
         hadoop: 1
 ]
 
-def prepareTasks = [ ]
-def archivePaths = [ ]
-
 subprojects {
+
+  configurations {
+    sshAntTask
+    s3AntTask
+  }
+
+  dependencies {
+    sshAntTask 'org.apache.ant:ant-jsch:1.7.1', 'jsch:jsch:0.1.29'
+    s3AntTask 'thirdparty:awstasks:0.3'
+  }
 
   def verifyPath = "${buildDir}/verify/"
   def execPath = "${verifyPath}/${project.name}"
 
   task unpackDist( dependsOn: 'dist' ) {
     archivePath = tasks[ 'dist' ].archivePath
-    archivePaths << archivePath
   }
 
   unpackDist << {
@@ -91,49 +87,48 @@ subprojects {
     println "${project.name} PASSED exec dist tests"
   }
 
-  prepareTasks << execSample
-}
+  task s3Upload( dependsOn: execSample ) {
 
-task s3Upload( dependsOn: prepareTasks ) {
+    awsAccessId = System.properties[ 'publish.aws.accessId' ]
+    awsSecretKey = System.properties[ 'publish.aws.secretKey' ]
+    s3Bucket = System.properties[ 'publish.bucket' ]
 
-  awsAccessId = System.properties[ 'publish.aws.accessId' ]
-  awsSecretKey = System.properties[ 'publish.aws.secretKey' ]
-  s3Bucket = System.properties[ 'publish.bucket' ]
+    remotePath = "samples/2.0/${project.name}/"
+  }
 
-  remotePath = "samples/2.0/"
-}
+  s3Upload << {
 
-s3Upload << {
+    ant.taskdef( name: 's3Upload', classname: 'dak.ant.taskdefs.S3Upload',
+            classpath: configurations.s3AntTask.asPath )
 
-  ant.taskdef( name: 's3Upload', classname: 'dak.ant.taskdefs.S3Upload',
-          classpath: configurations.s3AntTask.asPath )
+    def currentPath = new File( buildDir, 'latest.txt' )
 
-  archivePaths.each {archive ->
+    currentPath.write( "http://${s3Bucket}/${remotePath}${dist.archivePath.name}" )
+
     ant.s3Upload( verbose: 'true', accessId: awsAccessId, secretKey: awsSecretKey,
             bucket: s3Bucket, prefix: remotePath, publicRead: 'true' ) {
-      fileset( file: archive )
+      fileset( file: dist.archivePath )
+      fileset( file: currentPath )
     }
+
+    currentPath.delete()
   }
-}
 
-task sitePublish( dependsOn: s3Upload ) << {
+  task sitePublish( dependsOn: s3Upload ) << {
 
-  def publishBucket = System.properties[ 'publish.bucket' ]
-  def publishDownloadPath = System.properties[ 'publish.download.path' ]
-  def publishPort = !System.properties[ 'publish.port' ] ? '22' : System.properties[ 'publish.port' ]
-  def publishKeyFile = System.properties[ 'publish.keyfile' ]
+    def publishBucket = System.properties[ 'publish.bucket' ]
+    def publishDownloadPath = System.properties[ 'publish.download.path' ]
+    def publishPort = !System.properties[ 'publish.port' ] ? '22' : System.properties[ 'publish.port' ]
+    def publishKeyFile = System.properties[ 'publish.keyfile' ]
 
-  archivePaths.each { tarFile ->
-    def releaseTar = tarFile.name
+    def currentPath = new File( buildDir, 'latest.txt' )
 
-    def currentPath = new File( 'sample-current.txt' )
-
-    currentPath.write( "http://${publishBucket}/samples/2.0/${releaseTar}" )
+    currentPath.write( "http://${publishBucket}/samples/2.0/${project.name}/${dist.archivePath.name}" )
 
     ant.taskdef( name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
             classpath: configurations.sshAntTask.asPath )
 
-    def remoteToFile = "${publishDownloadPath}/samples/2.0/${releaseTar}"
+    def remoteToFile = "${publishDownloadPath}/samples/2.0/${project.name}/latest.txt"
 
     ant.scp( file: currentPath, remoteToFile: remoteToFile,
             keyfile: publishKeyFile, passphrase: '', port: publishPort, trust: 'true' )
