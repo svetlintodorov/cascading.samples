@@ -32,14 +32,14 @@ if( System.properties[ 'aws.properties' ] )
 
 def hadoopHome = System.properties[ 'hadoop.home' ]
 
-commandLines = [
+ext.commandLines = [
         logparser: "jar logparser.jar data/apache.200.txt output",
         loganalysis: "jar loganalysis.jar data/apache.200.txt output",
         wordcount: "jar wordcount.jar data/url+page.200.txt output local",
         hadoop: "jar hadoop.jar data/apache.200.txt output"
 ]
 
-numParts = [
+ext.numParts = [
         logparser: 1,
         loganalysis: 3,
         wordcount: 5,
@@ -62,7 +62,7 @@ subprojects {
   def execPath = "${verifyPath}/${project.name}"
 
   task unpackDist( dependsOn: 'dist' ) {
-    archivePath = tasks[ 'dist' ].archivePath
+    ext.archivePath = tasks[ 'dist' ].archivePath
   }
 
   unpackDist << {
@@ -89,11 +89,11 @@ subprojects {
 
   task s3Upload( dependsOn: execSample ) {
 
-    awsAccessId = System.properties[ 'publish.aws.accessId' ]
-    awsSecretKey = System.properties[ 'publish.aws.secretKey' ]
-    s3Bucket = System.properties[ 'publish.bucket' ]
+    ext.awsAccessId = System.properties[ 'publish.aws.accessId' ]
+    ext.awsSecretKey = System.properties[ 'publish.aws.secretKey' ]
+    ext.s3Bucket = System.properties[ 'publish.bucket' ]
 
-    remotePath = "samples/2.0/${project.name}/"
+    ext.remotePath = "samples/2.0/${project.name}/"
   }
 
   s3Upload << {

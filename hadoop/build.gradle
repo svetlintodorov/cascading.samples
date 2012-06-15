@@ -8,12 +8,6 @@ import java.text.SimpleDateFormat
 apply plugin: 'java'
 apply plugin: 'idea'
 
-project.version =
-  configurations {
-    provided
-    provided.extendsFrom( compile )
-  }
-
 sourceSets {
   main {
     java.srcDir 'src/java'
@@ -58,12 +52,4 @@ task dist( type: Tar, dependsOn: distCopy ) {
   classifier = new SimpleDateFormat( "yyyyMMdd" ).format( new Date() )
 
   from "${buildDir}/dist/"
-}
-
-ideaModule << {
-  beforeConfigured { module ->
-    module.dependencies.clear()
-  }
-
-  scopes.PROVIDED.plus += configurations.provided
 }

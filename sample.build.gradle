@@ -8,12 +8,6 @@ import java.text.SimpleDateFormat
 apply plugin: 'java'
 apply plugin: 'idea'
 
-project.version =
-  configurations {
-    provided
-    provided.extendsFrom(compile)
-  }
-
 sourceSets {
   main {
     java.srcDir 'src/java'
@@ -23,13 +17,13 @@ sourceSets {
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', urls: 'http://conjars.org/repo/'
+  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
 }
 
 dependencies {
-  compile('cascading:cascading-core:2.0.0-wip-+') { exclude group: 'log4j' }
-  compile('cascading:cascading-xml:2.0.0-wip-+')
-  compile('cascading:cascading-hadoop:2.0.0-wip-+') { transitive = false }
+  compile('cascading:cascading-core:2.0.+') { exclude group: 'log4j' }
+  compile('cascading:cascading-xml:2.0.+')
+  compile('cascading:cascading-hadoop:2.0.+') { transitive = false }
 }
 
 jar {
@@ -64,12 +58,4 @@ task dist(type: Tar, dependsOn: distCopy) {
   classifier = new SimpleDateFormat("yyyyMMdd").format(new Date())
 
   from "${buildDir}/dist/"
-}
-
-ideaModule << {
-  beforeConfigured { module ->
-    module.dependencies.clear()
-  }
-
-  scopes.PROVIDED.plus += configurations.provided
 }
