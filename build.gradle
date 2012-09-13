@@ -5,6 +5,7 @@
  */
 
 apply plugin: 'java'
+apply plugin: 'idea'
 
 evaluationDependsOn( 'logparser' )
 evaluationDependsOn( 'loganalysis' )
@@ -93,7 +94,7 @@ subprojects {
     ext.awsSecretKey = System.properties[ 'publish.aws.secretKey' ]
     ext.s3Bucket = System.properties[ 'publish.bucket' ]
 
-    ext.remotePath = "samples/2.0/${project.name}/"
+    ext.remotePath = "samples/2.1/${project.name}/"
   }
 
   s3Upload << {
@@ -123,12 +124,12 @@ subprojects {
 
     def currentPath = new File( buildDir, 'latest.txt' )
 
-    currentPath.write( "http://${publishBucket}/samples/2.0/${project.name}/${dist.archivePath.name}" )
+    currentPath.write( "http://${publishBucket}/samples/2.1/${project.name}/${dist.archivePath.name}" )
 
     ant.taskdef( name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
             classpath: configurations.sshAntTask.asPath )
 
-    def remoteToFile = "${publishDownloadPath}/samples/2.0/${project.name}/latest.txt"
+    def remoteToFile = "${publishDownloadPath}/samples/2.1/${project.name}/latest.txt"
 
     ant.scp( file: currentPath, remoteToFile: remoteToFile,
             keyfile: publishKeyFile, passphrase: '', port: publishPort, trust: 'true' )
