@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2012 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2013 Concurrent, Inc. All Rights Reserved.
  *
  * Project and contact information: http://www.concurrentinc.com/
  */
@@ -32,6 +32,8 @@ if( System.properties[ 'aws.properties' ] )
 }
 
 def hadoopHome = System.properties[ 'hadoop.home' ]
+
+ext.cascadingVersionMajor = '2.1'
 
 ext.commandLines = [
         logparser: "jar logparser.jar data/apache.200.txt output",
@@ -94,7 +96,7 @@ subprojects {
     ext.awsSecretKey = System.properties[ 'publish.aws.secretKey' ]
     ext.s3Bucket = System.properties[ 'publish.bucket' ]
 
-    ext.remotePath = "samples/2.1/${project.name}/"
+    ext.remotePath = "samples/${cascadingVersionMajor}/${project.name}/"
   }
 
   s3Upload << {
@@ -124,12 +126,12 @@ subprojects {
 
     def currentPath = new File( buildDir, 'latest.txt' )
 
-    currentPath.write( "http://${publishBucket}/samples/2.1/${project.name}/${dist.archivePath.name}" )
+    currentPath.write( "http://${publishBucket}/samples/${cascadingVersionMajor}/${project.name}/${dist.archivePath.name}" )
 
     ant.taskdef( name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp',
             classpath: configurations.sshAntTask.asPath )
 
-    def remoteToFile = "${publishDownloadPath}/samples/2.1/${project.name}/latest.txt"
+    def remoteToFile = "${publishDownloadPath}/samples/${cascadingVersionMajor}/${project.name}/latest.txt"
 
     ant.scp( file: currentPath, remoteToFile: remoteToFile,
             keyfile: publishKeyFile, passphrase: '', port: publishPort, trust: 'true' )

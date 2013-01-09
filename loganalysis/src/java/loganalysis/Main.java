@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2012 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2013 Concurrent, Inc. All Rights Reserved.
  *
  * Project and contact information: http://www.concurrentinc.com/
  */
@@ -65,7 +65,7 @@ public class Main
     Tap parsedLogTap = new Hfs( apacheFields, logsPath );
 
     // connect the assembly to source and sink taps
-    Flow importLogFlow = flowConnector.connect( logTap, parsedLogTap, importPipe );
+    Flow importLogFlow = flowConnector.connect( "import", logTap, parsedLogTap, importPipe );
 
     // create an assembly to parse out the time field into a timestamp
     // then count the number of requests per second and per minute
@@ -96,6 +96,7 @@ public class Main
     // a alternative method for binding taps and pipes
     FlowDef flowDef = FlowDef.flowDef();
 
+    flowDef.setName( "arrival-rate" );
     flowDef.addSource( tsPipe, parsedLogTap );
     flowDef.addTailSink( tsCountPipe, tsSinkTap );
     flowDef.addTailSink( tmCountPipe, tmSinkTap );
