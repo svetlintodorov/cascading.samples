@@ -8,7 +8,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 
 ext.hadoopVersion = "1.1.2"
-ext.cascadingVersion = "2.2.0-+"
+ext.cascadingVersion = "2.5.0-+"
 
 
 
@@ -39,7 +39,7 @@ if( System.properties[ 'aws.properties' ] )
 
 def hadoopHome = System.properties[ 'hadoop.home' ]
 
-ext.cascadingVersionMajor = '2.2'
+ext.cascadingVersionMajor = '2.5'
 
 ext.commandLines = [
         logparser: "jar logparser.jar data/apache.200.txt output",
