@@ -10,8 +10,8 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
-ext.cascadingVersion = '2.2.+'
-ext.hadoopVersion = '1.0.4'
+ext.cascadingVersion = '2.5.+'
+ext.hadoopVersion = '1.2.1'
 
 sourceSets {
   main {

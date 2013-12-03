@@ -8,7 +8,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 
 ext.hadoopVersion = "1.1.2"
-ext.cascadingVersion = "2.5.0-+"
+ext.cascadingVersion = "2.5.1"
 
 
 

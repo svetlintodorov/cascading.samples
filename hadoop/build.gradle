@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-  compile( 'org.apache.hadoop:hadoop-core:1.1.2' )
+  compile( 'org.apache.hadoop:hadoop-core:1.2.1' )
 }
 
 jar {
