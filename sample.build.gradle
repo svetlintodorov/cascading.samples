@@ -10,8 +10,8 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
-ext.cascadingVersion = '2.5.+'
-ext.hadoopVersion = '1.2.1'
+ext.cascadingVersion = '2.5.2'
+ext.hadoop2Version = '2.2.0'
 
 sourceSets {
   main {
@@ -28,7 +28,7 @@ repositories {
 dependencies {
   compile group: 'cascading', name: 'cascading-core', version: cascadingVersion
   compile group: 'cascading', name: 'cascading-xml', version: cascadingVersion
-  compile group: 'cascading', name: 'cascading-hadoop', version: cascadingVersion
+  compile group: 'cascading', name: 'cascading-hadoop2-mr1', version: cascadingVersion
 
   // these runtime deps allow the sample app to be run in an ide
 
@@ -36,13 +36,13 @@ dependencies {
   runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.6.1'
 
   // hadoop deps
-  runtime( group: 'org.apache.hadoop', name: 'hadoop-core', version: hadoopVersion ) {
-    exclude group: 'ant'
-    exclude group: 'junit'
-  }
+  runtime( group: 'org.apache.hadoop', name: 'hadoop-common', version: hadoop2Version )
+  runtime( group: 'org.apache.hadoop', name: 'hadoop-client', version: hadoop2Version )
 
-  runtime group: 'org.apache.hadoop', name: 'hadoop-test', version: hadoopVersion
-  runtime group: 'commons-io', name: 'commons-io', version: '2.1'
+
+  testCompile( group: 'org.apache.hadoop', name: 'hadoop-mapreduce-client-core', version: hadoop2Version )
+  testCompile( group: 'org.apache.hadoop', name: 'hadoop-minicluster', version: hadoop2Version )
+
 
   runtime group: 'javax.ws.rs', name: 'jsr311-api', version: '1.1.1'
 }
